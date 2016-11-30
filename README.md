@@ -6,4 +6,6 @@ Might work on Greasemonkey on Firefox.
 
 Modifies booking page of NYTA to make it easier to search for available times and removes unneeded elements.
 
+<img height="450" src="booking_screen.png">
+
 ***Bad Web designers won't stop us from getting what we want! :)))***
