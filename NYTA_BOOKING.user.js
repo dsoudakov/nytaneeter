@@ -22,7 +22,7 @@ $("head").append (
 );
 
 (function() {
-    // console.log('start');
+
     var dataTable;
     var lastSearch = "";
     var initDataTable = function() {
@@ -30,8 +30,6 @@ $("head").append (
         if ( $.fn.dataTable.isDataTable( '#RequestTabPage_pnlBooking_GridView3' ) ) {
             return;
         }
-
-        //console.log("initing table");
 
         var timesTable = $("#RequestTabPage_pnlBooking_GridView3");
 
@@ -52,38 +50,15 @@ $("head").append (
                "search": lastSearch
             },
             buttons: [
-                {
-                    text: 'PM SOUTH',
-                    action: function ( e, dt, node, config ) {
-                        dataTable.search( "pm south" ).draw();
-                        lastSearch = "pm south";
-                    },
-                    enabled: true
-                },
-                {
-                    text: 'PM EAST',
-                    action: function ( e, dt, node, config ) {
-                        dataTable.search( "pm east" ).draw();
-                        lastSearch = "pm east";
-                    },
-                    enabled: true
-                },
-                {
-                    text: 'PM NORTH',
-                    action: function ( e, dt, node, config ) {
-                        dataTable.search( "pm north" ).draw();
-                        lastSearch = "pm north";
-                    },
-                    enabled: true
-                },
-                {
-                    text: 'ALL',
-                    action: function ( e, dt, node, config ) {
-                        dataTable.search( "" ).draw();
-                        lastSearch = "";
-                    },
-                    enabled: true
-                }
+
+                createButton('PM EAST'),
+                createButton('PM SOUTH'),
+                createButton('PM NORTH'),
+                createButton('AM EAST'),
+                createButton('AM SOUTH'),
+                createButton('AM NORTH'),
+                createButton('')
+
             ]
         });
 
@@ -96,24 +71,21 @@ $("head").append (
             .addClass("table table-striped table-bordered table-condensed");
         $("#RequestTabPage_pnlBooking_GridView3_filter").css("text-align","center");
     };
-
     var hideCrap = function() {
-
-		//console.log('hiding crap');
 
         var clockDiv = $("div.label22");
         var hdr = $("div#header");
-		var refreshLbl = $("#lblRefresh");
-		var facilitySelection = $("#RequestTabPage_pnlBooking_Tr6");
-		var courtType = $("#RequestTabPage_pnlBooking_Tr7");
+        var refreshLbl = $("#lblRefresh");
+        var facilitySelection = $("#RequestTabPage_pnlBooking_Tr6");
+        var courtType = $("#RequestTabPage_pnlBooking_Tr7");
         var buddyListChkbox = $("#cbAddtoBuddyList");
         var buddyListChkboxLbl = $("#UpdatePanel1 > table > tbody > tr:nth-child(2) > td > span > label");
 
         hdr.hide();
         clockDiv.hide();
         refreshLbl.hide();
-		facilitySelection.hide();
-		courtType.hide();
+        facilitySelection.hide();
+        courtType.css('display', 'none');
         buddyListChkbox.hide();
         buddyListChkboxLbl.hide();
 
@@ -121,9 +93,32 @@ $("head").append (
         $("#RequestTabPage_pnlBooking_PanelGridView3 > div").css("height", "");
         $("#RequestTabPage_header").hide();
 
-        //console.log('hiding crap done');
+    };
 
-	};
+    var createButton = function(buttonText = "") {
+
+        var buttonObj = {
+            name: buttonText === '' ? 'ALL' : buttonText,
+            text: buttonText === '' ? 'ALL' : buttonText,
+            action: function ( e, dt, node, config ) {
+                dt.search( buttonText ).draw();
+                lastSearch = buttonText;
+                $(node).parent().children('a').each(function () {
+                    $(this).removeClass('btn-primary');
+                });
+                $(node).addClass("btn-primary");
+            },
+            init: function ( dt, node, config ) {
+                if(config.text == lastSearch || (config.text == 'ALL' && lastSearch === '' )) {
+                    $(node).addClass("btn-primary");
+                }
+            },
+            enabled: true
+        };
+
+        return buttonObj;
+
+    };
 
     hideCrap();
 
@@ -137,8 +132,6 @@ $("head").append (
 
 
         if(dataTable !== "") {
-           // console.log("DT search: " + dataTable.search());
-           // console.log("Last search: " + lastSearch);
             if(dataTable.search() !== lastSearch && lastSearch !== "") {
                 dataTable.search(lastSearch).draw();
             }
