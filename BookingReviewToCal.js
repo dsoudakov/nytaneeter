@@ -5,7 +5,10 @@
 // @description  add to Google Calendar
 // @author       DS
 // @match        http://nyta.chelseareservations.com/tennis/TNReviewMySchedule.aspx
-// @grant        none
+// @grant        GM_setValue
+// @grant        GM_getValue
+// @grant        GM_listValues
+// @grant        GM_deleteValue
 // @require https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js
 // ==/UserScript==
 
@@ -15,8 +18,13 @@
         return '?'+Object.keys(obj).reduce(function(a,k){a.push(k+'='+encodeURIComponent(obj[k]));return a;},[]).join('&');
     }
 
+    function Settingsobject(){this.prefix="",this.default={}}Settingsobject.prototype.set=function(a,b){b="boolean"==typeof b?b?"{b}1":"{b}0":"string"==typeof b?"{s}"+b:"number"==typeof b?"{n}"+b:"{o}"+b.toSource(),GM_setValue(this.prefix+""+a,b)},Settingsobject.prototype.get=function(name){var value=GM_getValue(this.prefix+""+name,this.default[name]||"{b}0");if(!value.indexOf)return value;if(0==value.indexOf("{o}"))try{return eval("("+value.substr(3)+")")}catch(a){return GM_log("Error while calling variable "+name+" while translating into an object: \n\n"+a+"\n\ncode:\n"+value.substr(3)),!1}return 0==value.indexOf("{b}")?!!parseInt(value.substr(3)):0==value.indexOf("{n}")?parseFloat(value.substr(3)):0==value.indexOf("{s}")?value.substr(3):value},Settingsobject.prototype.register=function(a,b){return this.default[a]=b,!0};
+
+    var globalSettings=new Settingsobject();
+    globalSettings.prefix="nytaBookingReview.";
+
     var googleEventURL = 'http://www.google.com/calendar/event';
-    var playDateTable = $("#container > table > tbody > tr:nth-child(3) > td > table:nth-child(2) > tbody > tr:nth-child(3) > td:nth-child(1)");
+    var playDateTable = $("td:contains('Play Date')");
     var rowsWithDates = playDateTable.parent('tr').nextAll();
 
     if(!rowsWithDates.length) return;
@@ -80,15 +88,56 @@
         }
     });
 
+    var GMhrefsToKeep = [];
+
     times.forEach(function(item, index){
         var lastTD = $(item.jq).children().last();
-        $(lastTD.children()[0]).hide(); // hide Outlook link
+        $(lastTD.children()[0]).hide();
         var calLink = $(lastTD.children()[1]);
         if(item.added !== 1) {
             calLink.hide();
         } else {
+            calLink.click(function(e){
+                var linkHref = e.currentTarget.href;
+                if(globalSettings.get(linkHref) == "clicked" || linkHref.indexOf('#') + 1 == linkHref.length ) {
+                    e.preventDefault();
+                    return;
+                }
+                globalSettings.set(linkHref, "clicked");
+            });
+
             calLink.attr('href', googleEventURL + serialize(times[index].calEvent));
             calLink.attr('target', '_blank');
+
+            var linkHref = calLink.attr('href');
+            GMhrefsToKeep.push(globalSettings.prefix + linkHref);
+            if(!globalSettings.get(linkHref)) {
+                globalSettings.register(linkHref, false);
+            } else {
+                if(globalSettings.get(linkHref) == "clicked") {
+                    calLink.after('<input type="checkbox" data-index="'+ index + '" id="chkBox' + index + '"  />Override');
+                    $('#chkBox' + index).change(function(){
+                        var thisLink = $($(this)[0]).prev();
+                        if (this.checked) {
+                            thisLink.attr('href', googleEventURL + serialize(times[$(this).data('index')].calEvent));
+                            globalSettings.set(thisLink.attr('href'), "notclicked");
+                            thisLink.attr('target', '_blank');
+                        } else {
+                            globalSettings.set(thisLink.attr('href'), "clicked");
+                            thisLink.attr('href', '#');
+                            thisLink.attr('target', '');
+                        }
+                    });
+                    calLink.attr('href', '#');
+                    calLink.attr('target', '');
+                }
+            }
         }
     });
+
+    for (var GMval of GM_listValues()){
+        if(GMhrefsToKeep.indexOf(GMval) == -1){
+            GM_deleteValue(GMval);
+        }
+    }
 })();
