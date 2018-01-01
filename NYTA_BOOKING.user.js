@@ -4,7 +4,7 @@
 // @version      0.1
 // @description  Better time table
 // @author       DS
-// @match        http://nyta.chelseareservations.com/tennis/TNBookingMulti.aspx
+// @match        https://nyta.chelseareservations.com/tennis/TNBookingMulti.aspx
 // @grant        GM_getResourceText
 // @grant        GM_getResourceURL
 // @grant        GM_addStyle
