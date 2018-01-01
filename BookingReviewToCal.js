@@ -4,7 +4,7 @@
 // @version      0.1
 // @description  add to Google Calendar
 // @author       DS
-// @match        http://nyta.chelseareservations.com/tennis/TNReviewMySchedule.aspx
+// @match        https://nyta.chelseareservations.com/tennis/TNReviewMySchedule.aspx
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_listValues
